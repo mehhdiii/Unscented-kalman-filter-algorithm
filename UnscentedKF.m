@@ -2,15 +2,10 @@ classdef UnscentedKF < handle
    properties
       
       %History variables: 
-      xoptimal_last
-      Poptimal_last 
+      xoptimal
+      Poptimal 
       xpred
       Ppred
-      
-%       predhistory %history log of predictions
-%       truehistory %history log of true plant values 
-%       measurementhistory %history log of measurements
-%       Plast %last P covariance matrix
       
       %Function handles: 
       statetransitionfcn
@@ -103,56 +98,26 @@ classdef UnscentedKF < handle
       
       function [x_predict, P_predict] = predict(self, x_last, P_last)
           
-        [X_sigma, X_sigma_tilde, W_sigma] = sigma_points(x_last, P_last, self.statetransitionfcn);
+        [~, X_sigma_tilde, W_sigma] = sigma_points(x_last, P_last, self.statetransitionfcn);
         x_predict = sum_x(W_sigma, X_sigma_tilde);
         P_predict = sum_P(x_predict, x_predict, X_sigma_tilde, X_sigma_tilde, self.statecovariance);
-%         [x_predict, P_predict] = summation_helper(W_sigma, X_sigma_tilde, self.statecovariance);
         self.xpred = x_predict;
         self.Ppred = P_predict; 
       end
       
-      function [Xcorr, Pcorr] = correct(self, yk)
-         %create measurement noise 
-%          self.wk = sqrt(self.measurementcovariance)*randn(self.measurement_dim(1), 1); 
-         %create true measurement
-%          yk = self.measurementfcn(self.xk, self.T, self.wk); 
-         
-         %correcting measurement
-%          Xpred = self.predhistory(:, self.k); 
-%          H = self.measurementj(Xpred, self.T); 
-%          Ypred = self.measurementfcn(Xpred, self.T, 0);
+      function [xoptimal, Poptimal] = correct(self, yk)
+         %calculate sigma points: 
          [X_sigma, Y_sigma_tilde, W_sigma] = sigma_points(self.xpred, self.Ppred, self.measurementfcn);
          y_predict = sum_x(W_sigma, Y_sigma_tilde);
+         %compute predicted measurements: 
          S_k = sum_P(y_predict, y_predict, Y_sigma_tilde, Y_sigma_tilde, self.measurementcovariance);
          psi_k = sum_P(self.xpred, y_predict, X_sigma, Y_sigma_tilde, self.measurementcovariance);
-         xoptimal = self.xoptimal_last + psi_k*inv(s_k)*(yk-y_predict); 
-         Poptimal = self.Poptimal_last -psi_k*inv(s_k)*psi_k'; 
-         
-         self.Poptimal_last = Poptimal;
-         self.xoptimal_last =xoptimal;    
-         %          [y_predict, S] = summation_helper(W_sigma, Y_sigma_tilde, self.measurementcovariance);
-%          Sk = H*self.Plast*H' + self.measurementcovariance; 
-
-%          Kk = self.Plast*H'*inv(Sk); 
-         
-         
-         
-         %correct the readings 
-%          Xcorr = Xpred+Kk*(yk-Ypred);
-%          Pcorr = self.Plast - Kk*H*self.Plast ;
-         
-         
-%          %overwrite to existing values: 
-%          self.measurementhistory(:, self.k) = yk; 
-%          self.Plast = Pcorr; 
-%          self.predhistory(:, self.k) = Xcorr;  
-
-      end
-      
+         %calculating posterior mean and covariance: 
+         xoptimal = self.xoptimal_last + psi_k*inv(S_k)*(yk-y_predict); 
+         Poptimal = self.Poptimal_last -psi_k*inv(S_k)*psi_k'; 
+         %save optimal values: 
+         self.xoptimal = xoptimal;
+         self.Poptimal = Poptimal;
+      end  
    end
-   
-%    methods (Access = private)
-%    
-%        function 
-%    end
 end
