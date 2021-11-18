@@ -9,9 +9,9 @@ measurement_f = @measurement_function;
 % measurement_j = @measurement_jacobian; 
 
 % define signal parameters: system
-var_v1 =1; 
-var_v2 =1; 
-var_v3 = 1; 
+var_v1 =1e-4; 
+var_v2 =1e-4 ; 
+var_v3 =1e-4; 
 state_covariance = diag([var_v1 var_v2 var_v3]); 
 
 
@@ -20,16 +20,18 @@ var_w1 = 1;
 var_w2 = 1; 
 measurement_covariance = diag([var_w1 var_w2]); 
 
-initial_x = [0; 0; 0]; %Last optimal predicted value (X_hat{k-1}): zero initially 
+initial_x = [1; 1; 1]; %Last optimal predicted value (X_hat{k-1}): zero initially 
 x_last = [0; 0; 0];
 P_last = eye(3); 
 x = zeros(3, ITER);
 y = zeros(2, ITER); 
+x_filtered = zeros(3, ITER);
 %define EKfilter object 
 filter = UnscentedKF(statetransition_f, measurement_f, state_covariance,...
               measurement_covariance, T)
+hold on 
 for k = 2:ITER  
-    'ITERATION #:' + string(k)
+%     'ITERATION #:' + string(k)
     %generate xk: 
     vk = sqrt(state_covariance)*randn(3, 1);
     x(:, k) = statetransition_f(x(:, k-1), T, vk);
@@ -39,10 +41,16 @@ for k = 2:ITER
     
     %KF
     [Xpred, Ppred] = filter.predict(x_last, P_last); 
-    [x_last, P_last] = filter.correct(y(:, k)); 
-    'ITERATION #:' + string(k) + 'Complete!'
+    [x_last, P_last] = filter.correct(y(:, k));
+    x_filtered(:, k) = x_last;
+    
+    plot(x(1, 1:k), x(2, 1:k), 'b')
+    plot(x_filtered(1, 1:k), x_filtered(2, 1:k), '--r')
+    
+%     'ITERATION #:' + string(k) + 'Complete!'
 end
-plot(x(1, :), x(2, :))
+legend('True', 'Estimated')
+hold off
 % figure()
 % hold on 
 % plot(filter.truehistory(1, 2:end), filter.truehistory(2, 2:end), 'black', 'linewidth', 2)

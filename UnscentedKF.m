@@ -74,7 +74,6 @@ classdef UnscentedKF < handle
             self.xoptimal = xoptimal;
             self.Poptimal = Poptimal;
         end
-        
     end
 end
 
@@ -88,11 +87,11 @@ function [X_sigma, X_sigma_tilde, W_sigma] = sigma_points(x, Covariance, fcn_han
 %     W_sigma: Weight of corresponding sigma point
 L = length(x);
 s = 2*L+1;
-kai = 1;
+kai = 0.1;
 % Covariance
-L_mat = chol((L+kai)*Covariance)';
-X_sigma = zeros(L, 2*L+1);
-W_sigma = zeros(1, 2*L+1);
+L_mat = chol(Covariance)';
+X_sigma = zeros(L, s);
+W_sigma = zeros(1, s);
 for i=1:s
     if i<=L
         X_sigma(:, i) = x + sqrt(L+kai)*L_mat(:, i);
@@ -104,7 +103,7 @@ for i=1:s
     
     if i==1
         W_sigma(i) = kai/(kai+L);
-    else
+    else 
         W_sigma(i) = 1/(2*(kai+L));
     end
 end
