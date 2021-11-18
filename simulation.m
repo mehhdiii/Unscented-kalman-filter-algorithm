@@ -1,6 +1,6 @@
 close all; clear; 
 T = 0.1;
-ITER = 2; %number of iterations
+ITER = 3; %number of iterations
 
 % define the system: 
 statetransition_f = @state_function; 
@@ -31,16 +31,13 @@ filter = UnscentedKF(statetransition_f, measurement_f, state_covariance,...
 for k = 2:ITER   
     %generate xk: 
     vk = sqrt(state_covariance)*randn(3, 1);
-%     x(:, k-1)
-    x_last
-    P_last
     x(:, k) = statetransition_f(x(:, k-1), T, vk);
     %generate yk:
     wk = sqrt(measurement_covariance)*randn(2, 1);
     y(:, k) = measurement_f(x(:, k), T, wk);
-    
+    y(:, k)
     [Xpred, Ppred] = filter.predict(x_last, P_last); 
-%     [x_last, P_last] = filter.correct(y(:, k)); 
+    [x_last, P_last] = filter.correct(y(:, k)); 
     
 end
 
