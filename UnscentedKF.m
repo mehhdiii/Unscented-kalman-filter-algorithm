@@ -58,18 +58,18 @@ classdef UnscentedKF < handle
             self.Ppred = P_predict;
         end
         
-        function [xoptimal, Poptimal] = correct(self, yk)
+        function [xoptimal, Poptimal] = correct(self, yk, xpred, Ppred)
             
             %corrects the value of the prediction
             %calculate sigma points:
-            [X_sigma, Y_sigma_tilde, W_sigma] = sigma_points(self.xpred, self.Ppred, self.measurementfcn, self.T);
+            [X_sigma, Y_sigma_tilde, W_sigma] = sigma_points(xpred, Ppred, self.measurementfcn, self.T);
             y_predict = sum_x(W_sigma, Y_sigma_tilde);
             %compute predicted measurements:
             S_k = sum_P(y_predict, y_predict, Y_sigma_tilde, Y_sigma_tilde, W_sigma,self.measurementcovariance);
             psi_k = sum_P(self.xpred, y_predict, X_sigma, Y_sigma_tilde, W_sigma,0);
             %calculating posterior mean and covariance:
-            xoptimal = self.xpred + psi_k*inv(S_k)*(yk-y_predict);
-            Poptimal = self.Ppred - psi_k*inv(S_k)*psi_k';
+            xoptimal = self.xpred + psi_k*inv(S_k)*(yk-y_predict)
+            Poptimal = self.Ppred - psi_k*inv(S_k)*psi_k'
             %save optimal values:
             self.xoptimal = xoptimal;
             self.Poptimal = Poptimal;

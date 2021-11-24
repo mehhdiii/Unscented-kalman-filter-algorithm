@@ -16,19 +16,19 @@ state_covariance = diag([var_v1 var_v2 var_v3]);
 
 
 % define signal parameters: observation/sensor
-var_w1 = 1; 
-var_w2 = 1; 
+var_w1 = 1e-2; 
+var_w2 = 1e-2; 
 measurement_covariance = diag([var_w1 var_w2]); 
 
 initial_x = [1; 1; 1]; %Last optimal predicted value (X_hat{k-1}): zero initially 
-x_last = [0; 0; 0];
+x_last = [1; 1; 1];
 P_last = eye(3); 
 x = zeros(3, ITER);
 y = zeros(2, ITER); 
 x_filtered = zeros(3, ITER);
 %define EKfilter object 
 filter = UnscentedKF(statetransition_f, measurement_f, state_covariance,...
-              measurement_covariance, T)
+              measurement_covariance, T);
 hold on 
 for k = 2:ITER  
 %     'ITERATION #:' + string(k)
@@ -41,7 +41,7 @@ for k = 2:ITER
     
     %KF
     [Xpred, Ppred] = filter.predict(x_last, P_last); 
-    [x_last, P_last] = filter.correct(y(:, k));
+    [x_last, P_last] = filter.correct(y(:, k), Xpred, Ppred);
     x_filtered(:, k) = x_last;
     
     plot(x(1, 1:k), x(2, 1:k), 'b')
